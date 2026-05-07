@@ -6,6 +6,8 @@ En enkel webbsida som genererar utskriftsbara bokningsscheman för en gemensam t
 Om markeringarna inte syns i utskriften, aktivera "Skriv ut bakgrunder" (eller motsvarande) i utskriftsdialogen. Vissa webbläsare (Chrome) gillar att skriva ut
 sidhuvuden och sidfötter, men dessa kan också stängas av.
 
+Enklare ändå är att öppna följande länk i webbläsaren: https://perkroon.github.io/bokningslista/
+
 ## Bokningsregler
 
 - **Lördag och söndag före kl. 12.00** – tvättstugan får ej användas (markerad med mönster).
