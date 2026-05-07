@@ -27,19 +27,28 @@
         gap: 24px;
       }
 
-      /* ── Month page — landscape A4 ── */
+      /* ── Month page — landscape A4 (matches @page content area) ── */
       .month-page {
         background: #fff;
-        width: 297mm;
-        height: 181mm;
-        padding: 10mm 10mm;
+        width: 277mm;
+        height: 190mm;
+        display: flex;
+        flex-direction: column;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        overflow: hidden;
+      }
+
+      /* Wrapper around the table so flex sizing works reliably
+         (a <table> as a direct flex child does not honor flex-shrink). */
+      .page-body {
+        flex: 1 1 0;
+        min-height: 0;
+        padding-right: 1mm;
       }
 
       /* ── Booking table ── */
       table.booking {
         width: 100%;
+        height: 100%;
         border-collapse: collapse;
         table-layout: fixed;
       }
@@ -122,6 +131,7 @@
       /* ── Legend ── */
       .legend {
         display: flex;
+        flex: 0 0 auto;
         gap: 8mm;
         margin-top: 2mm;
         font-size: 8pt;
@@ -161,8 +171,7 @@
         }
         @page {
           size: A4 landscape;
-          page-orientation: rotate-left;
-          margin: 15mm 10mm;
+          margin: 10mm;
         }
         body {
           background: none;
@@ -170,6 +179,7 @@
         #output {
           padding: 0;
           gap: 0;
+          align-items: stretch;
         }
         .month-page {
           box-shadow: none;
@@ -219,22 +229,10 @@
         return "bookable";
       }
 
-      // Fixed layout heights (mm) that must be accounted for on the print page.
-      // A4 landscape content area: 210 - 2×8mm margins = 194mm total.
-      const TITLE_ROW_MM = 9;
-      const SLOTS_ROW_MM = 7;
-      const LEGEND_MM = 8; // legend div incl. margin-top
-      const SAFETY_MM = 4; // buffer for borders, rounding, browser quirks
-      const BODY_MM = 150; //194 - TITLE_ROW_MM - SLOTS_ROW_MM - LEGEND_MM - SAFETY_MM; // = 166mm
-
       function renderMonth(year, month) {
         const name = MONTHS[month];
         const title = `Bokningslista för tvättstuga ${year}: ${name[0].toUpperCase() + name.slice(1)}`;
         const nSlots = SLOTS.length;
-
-        // Days in this month
-        const numDays = new Date(year, month + 1, 0).getDate();
-        const rowH = (BODY_MM / numDays).toFixed(2); // mm per row
 
         const colgroup = `<colgroup>
       <col class="col-day">
@@ -257,7 +255,7 @@
         while (d.getMonth() === month) {
           const wd = weekday(d);
           rows.push(
-            `<tr class="${wd === 0 ? "is-monday" : ""}" style="height:${rowH}mm">` +
+            `<tr class="${wd === 0 ? "is-monday" : ""}">` +
               `<td class="col-day">${WD_SHORT[wd]} ${d.getDate()} ${name}</td>` +
               SLOTS.map((_, i) => `<td class="${cellClass(wd, i)}"></td>`).join(
                 "",
@@ -277,7 +275,9 @@
     </div>`;
 
         return `<div class="month-page">
-      <table class="booking">${colgroup}${thead}<tbody>${rows.join("")}</tbody></table>
+      <div class="page-body">
+        <table class="booking">${colgroup}${thead}<tbody>${rows.join("")}</tbody></table>
+      </div>
       ${legend}
     </div>`;
       }
