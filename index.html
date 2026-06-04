@@ -107,6 +107,10 @@
         font-weight: bold;
       }
 
+      td.col-day.is-red {
+        color: #c00;
+      }
+
       /* Thick border above each Monday to separate weeks */
       tr.is-monday td {
         border-top: 2px solid #444;
@@ -223,8 +227,96 @@
         return (date.getDay() + 6) % 7;
       }
 
-      function cellClass(wd, i) {
+      function easterSunday(year) {
+        const a = year % 19;
+        const b = Math.floor(year / 100);
+        const c = year % 100;
+        const d = Math.floor(b / 4);
+        const e = b % 4;
+        const f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3);
+        const h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4);
+        const k = c % 4;
+        const l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const month = Math.floor((h + l - 7 * m + 114) / 31);
+        const day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(year, month - 1, day);
+      }
+
+      function addDays(date, days) {
+        const d = new Date(date);
+        d.setDate(d.getDate() + days);
+        return d;
+      }
+
+      function isoDate(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      // Scan a date range and return the first date whose weekday() matches targetWd.
+      function findWeekdayInRange(start, end, targetWd) {
+        for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
+          if (weekday(d) === targetWd) return new Date(d);
+        }
+        return null;
+      }
+
+      const holidayCache = new Map();
+
+      function getSwedishHolidays(year) {
+        // Reference: https://sv.wikipedia.org/wiki/Helgdagar_i_Sverige
+        if (holidayCache.has(year)) {
+          return holidayCache.get(year);
+        }
+
+        const easter = easterSunday(year);
+        const redDays = [
+          new Date(year, 0, 1), // Nyårsdagen
+          new Date(year, 0, 6), // Trettondedag jul
+          addDays(easter, -2), // Långfredagen
+          addDays(easter, 1), // Annandag påsk
+          new Date(year, 4, 1), // Första maj
+          addDays(easter, 39), // Kristi himmelsfärds dag
+          new Date(year, 5, 6), // Sveriges nationaldag
+          addDays(easter, 49), // Pingstdagen
+          findWeekdayInRange(new Date(year, 5, 20), new Date(year, 5, 26), 5), // Midsommardagen
+          findWeekdayInRange(new Date(year, 9, 31), new Date(year, 10, 6), 5), // Alla helgons dag
+          new Date(year, 11, 25), // Juldagen
+          new Date(year, 11, 26), // Annandag jul
+        ];
+        const aftnar = [
+          findWeekdayInRange(new Date(year, 5, 19), new Date(year, 5, 25), 4), // Midsommarafton
+          new Date(year, 11, 24), // Julafton
+          new Date(year, 11, 31), // Nyårsafton
+        ];
+
+        const result = {
+          red: new Set(redDays.filter(Boolean).map(isoDate)),
+          aftnar: new Set(aftnar.filter(Boolean).map(isoDate)),
+        };
+        holidayCache.set(year, result);
+        console.log("Följande helgdagar har identifierats för " + year + ":", {
+          result,
+        });
+        return result;
+      }
+
+      function isRedDay(date) {
+        return getSwedishHolidays(date.getFullYear()).red.has(isoDate(date));
+      }
+
+      function isAfton(date) {
+        return getSwedishHolidays(date.getFullYear()).aftnar.has(isoDate(date));
+      }
+
+      function cellClass(date, wd, i) {
         if ((wd === 5 || wd === 6) && i < 2) return "blocked";
+        if ((isRedDay(date) || isAfton(date)) && i < 2) return "blocked";
         if (wd === 4 && i === 5) return "freeforall";
         return "bookable";
       }
@@ -254,12 +346,13 @@
         const d = new Date(year, month, 1);
         while (d.getMonth() === month) {
           const wd = weekday(d);
+          const red = wd === 6 || isRedDay(d);
           rows.push(
             `<tr class="${wd === 0 ? "is-monday" : ""}">` +
-              `<td class="col-day">${WD_SHORT[wd]} ${d.getDate()} ${name}</td>` +
-              SLOTS.map((_, i) => `<td class="${cellClass(wd, i)}"></td>`).join(
-                "",
-              ) +
+              `<td class="col-day${red ? " is-red" : ""}">${WD_SHORT[wd]} ${d.getDate()} ${name}</td>` +
+              SLOTS.map(
+                (_, i) => `<td class="${cellClass(d, wd, i)}"></td>`,
+              ).join("") +
               `</tr>`,
           );
           d.setDate(d.getDate() + 1);

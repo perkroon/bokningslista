@@ -12,7 +12,7 @@ Endast testad i ett fåtal webbläsare och med en enda skrivare.
 
 ## Bokningsregler
 
-- **Lördag och söndag före kl. 12.00** – tvättstugan får ej användas (markerad med mönster).
+- **Lördag och söndag, samt helgdagar (inkl. aftnar) före kl. 12.00** – tvättstugan får ej användas (markerad med mönster).
 - **Fredag kl. 20.00–22.00** – obokningsbar tid, först till kvarn (markerad med grått).
 
 ## Framtida förbättringar
