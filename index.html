@@ -35,6 +35,15 @@
         display: flex;
         flex-direction: column;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        position: relative;
+      }
+
+      .qr {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 16mm;
+        height: 16mm;
       }
 
       /* Wrapper around the table so flex sizing works reliably
@@ -368,6 +377,7 @@
     </div>`;
 
         return `<div class="month-page">
+      <img class="qr" src="qrcode.png" alt="QR-kod">
       <div class="page-body">
         <table class="booking">${colgroup}${thead}<tbody>${rows.join("")}</tbody></table>
       </div>
